@@ -186,7 +186,14 @@ compute_p_g_cond_r <- function(
 #' @param surname_col A string denoting which column contains the voter surname.
 #' @return A tibble with rows denoting voters and columns denoting the
 #'  probability that each voter is of a particular racial group.
-#'
+#' @param surname_counts A dataframe denoting the frequency with which surnames
+#' correspond to different race/ethnicities. If NULL, the Census surname list is
+#'  used with categories and merging functions from wru. The dataframe should
+#' contain one column with surnames (specified with the y surname_col_counts
+#' parameter) and one column for each race/ethnicity group (specified with the
+#' race_cols parameter).
+#' @param surname_col_counts A string denoting the column in the surname_counts
+#' tibble that refers to the geographic unit.
 #' @import dplyr
 #' @importFrom wru merge_surnames
 #' @export compute_p_r_cond_s
@@ -243,14 +250,18 @@ compute_p_r_cond_s <- function(
 #' @param surname_col A string denoting which column contains the voter surname.
 #' @param geo_col A string denoting which column contains the geographic unit
 #'  ID.
+#' @param surname_counts A dataframe denoting the frequency with which surnames
+#' correspond to different race/ethnicities. If NULL, the Census surname list is
+#'  used with categories and merging functions from wru. The dataframe should
+#' contain one column with surnames (specified with the y surname_col_counts
+#' parameter) and one column for each race/ethnicity group (specified with the
+#' race_cols parameter).
 #' @param race_cols A list of strings denoting the columns containing racial
 #'  groups.
-#' @param geo_col_counts A string denoting the column in the counts tibble that
-#'  refers to the geographic unit.
-#' @param p_r_s A dataframe denoting the probability of race conditioned on
-#'  surname that matches with the provided voter file. Can accelerate
-#'  computation if provided up front.
-#'
+#' @param geo_col_counts A string denoting the column in the geo_counts tibble
+#' that refers to the geographic unit.
+#' @param surname_col_counts A string denoting the column in the surname_counts
+#' tibble that refers to the geographic unit.
 #' @return A tibble with rows denoting voters and columns denoting the
 #'  probability that each voter is of a particular racial group.
 #'
@@ -263,8 +274,8 @@ compute_p_r_cond_s_g <- function(
   geo_counts,
   surname_col,
   geo_col,
+  surname_counts = NULL,
   race_cols = c("whi", "bla", "his", "asi", "oth"),
-  surname_counts,=  NULL
   geo_col_counts = "fips",
   surname_col_counts = "surname",
 ) {
@@ -308,7 +319,7 @@ compute_p_r_cond_s_g <- function(
 #' @param surname_col A string denoting which column contains the voter surname.
 #' @param geo_col A string denoting which column contains the geographic unit
 #'  ID.
-#' @param census_counts A tibble containing counts (divided amongst constituent
+#' @param geo_counts A tibble containing counts (divided amongst constituent
 #'  groups) per geographic units (rows). If NULL, these counts will be obtained
 #'  using the eiCompare helper function and the other parameters.
 #' @param geography The geographic level at which to obtain Census data. If
@@ -321,6 +332,14 @@ compute_p_r_cond_s_g <- function(
 #'  data. Otherwise, uses the 5-year ACS summary data.
 #' @param geo_col_counts A string denoting the column in the counts tibble that
 #'  refers to the geographic unit.
+#' @param surname_col_counts A string denoting the column in the surname_counts
+#' tibble that refers to the geographic unit.
+#' @param surname_counts A dataframe denoting the frequency with which surnames
+#' correspond to different race/ethnicities. If NULL, the Census surname list is
+#'  used with categories and merging functions from wru. The dataframe should
+#' contain one column with surnames (specified with the y surname_col_counts
+#' parameter) and one column for each race/ethnicity group (specified with the
+#' race_cols parameter).
 #' @param race_cols A list of strings denoting the columns containing racial
 #'  groups.
 #' @param impute_missing A bool denoting whether voter file entries that do not
@@ -338,7 +357,7 @@ bisg <- function(
   voter_file,
   surname_col,
   geo_col,
-  census_counts = NULL,
+  geo_counts = NULL,
   geography = NULL,
   state = NULL,
   county = NULL,
@@ -351,11 +370,11 @@ bisg <- function(
   cache = FALSE
 ) {
   # If counts aren't provided, obtain then via tidycensus
-  if (is.null(census_counts)) {
+  if (is.null(geo_counts)) {
     if (verbose) {
       message("Obtaining counts from Census Bureau using tidycensus.")
     }
-    census_counts <- get_census_race_counts(
+    geo_counts <- get_census_race_counts(
       geography = geography,
       state = state,
       county = county,
@@ -373,7 +392,7 @@ bisg <- function(
   }
   p_r_s_g <- compute_p_r_cond_s_g(
     voter_file = voter_file,
-    counts = census_counts,
+    counts = geo_counts,
     surname_col = surname_col,
     geo_col = geo_col,
     race_cols = race_cols,
@@ -403,7 +422,7 @@ bisg <- function(
           message(paste("Re-performing BISG at the", geography, "level."))
         }
         # Get Census counts at a broader spatial extent
-        census_counts <- get_census_race_counts(
+        geo_counts <- get_census_race_counts(
           geography = geography,
           state = state,
           county = county,
@@ -413,7 +432,7 @@ bisg <- function(
         # Re-perform BISG
         new_p_r_s_g <- compute_p_r_cond_s_g(
           voter_file = voter_file[no_geocode_match, ],
-          counts = census_counts,
+          counts = geo_counts,
           surname_col = surname_col,
           geo_col = geo_col,
           race_cols = race_cols,
