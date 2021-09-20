@@ -190,25 +190,42 @@ compute_p_g_cond_r <- function(
 #' @import dplyr
 #' @importFrom wru merge_surnames
 #' @export compute_p_r_cond_s
-compute_p_r_cond_s <- function(voter_file, surname_col) {
-  p_r_s <- suppressWarnings(suppressMessages(wru::merge_surnames(
-    voter.file = dplyr::rename(voter_file,
-                               surname = dplyr::all_of(surname_col)),
-    surname.year = 2010,
-    clean.surname = TRUE,
-    impute.missing = TRUE
-  ))) %>%
-    dplyr::rename(
-      !!surname_col := surname,
-      whi = p_whi,
-      bla = p_bla,
-      his = p_his,
-      asi = p_asi,
-      oth = p_oth
-    ) %>%
-    dplyr::select(
-      all_of(surname_col), whi, bla, his, asi, oth
-    )
+compute_p_r_cond_s <- function(
+  voter_file,
+  surname_col,
+  surname_counts = NULL,
+  surname_col_counts = "surname",
+  race_cols = c("whi", "bla", "his", "asi", "oth")) {
+
+  # If no surname table given, use wru default
+  if (is.null(surname_table)) {
+
+    p_r_s <- suppressWarnings(suppressMessages(wru::merge_surnames(
+      voter.file = dplyr::rename(voter_file,
+                                 surname = dplyr::all_of(surname_col)),
+      surname.year = 2010,
+      clean.surname = TRUE,
+      impute.missing = TRUE
+    ))) %>%
+      dplyr::rename(
+        !!surname_col := surname,
+        whi = p_whi,
+        bla = p_bla,
+        his = p_his,
+        asi = p_asi,
+        oth = p_oth
+      ) %>%
+      dplyr::select(
+        all_of(surname_col), whi, bla, his, asi, oth
+      )
+
+  } else {
+
+    surname_counts[,race_cols] <-
+      surname_counts[,race_cols] / rowSums(surname_counts[,race_cols])
+
+    p_r_s <- surname_counts[,c(surname_col_counts, race_cols)]
+  }
   return(p_r_s)
 }
 
@@ -242,19 +259,27 @@ compute_p_r_cond_s <- function(voter_file, surname_col) {
 #' @importFrom stringr str_length str_sub
 #' @export compute_p_r_cond_s_g
 compute_p_r_cond_s_g <- function(
-  voter_file, counts, surname_col, geo_col,
-  race_cols = c("whi", "bla", "his", "asi", "oth"), geo_col_counts = "fips",
-  p_r_s = NULL
+  voter_file,
+  geo_counts,
+  surname_col,
+  geo_col,
+  race_cols = c("whi", "bla", "his", "asi", "oth"),
+  surname_counts,=  NULL
+  geo_col_counts = "fips",
+  surname_col_counts = "surname",
 ) {
-  if (is.null(p_r_s)) {
-    # Compute probability of race conditioned on surname
-    p_r_s <- compute_p_r_cond_s(voter_file = voter_file,
-                                surname_col = surname_col)
-  }
+  # Compute probability of race conditioned on surname
+  p_r_s <- compute_p_r_cond_s(
+    voter_file = voter_file,
+    surname_col = surname_col,
+    surname_counts = surname_counts,
+    surname_col_counts = surname_col_counts,
+    race_cols = race_cols
+  )
   # Compute probability of geography conditioned on race, for all geographies
-  p_g_r_all <- compute_p_g_cond_r(counts = counts, cols = race_cols)
+  p_g_r_all <- compute_p_g_cond_r(counts = geo_counts, cols = race_cols)
   # Check if the IDs for voter file and the counts have the same length
-  fips_length <- unique(stringr::str_length(counts[[geo_col_counts]]))
+  fips_length <- unique(stringr::str_length(geo_counts[[geo_col_counts]]))
   voter_file[[geo_col]] <- stringr::str_sub(
     voter_file[[geo_col]],
     end = fips_length)
@@ -310,10 +335,20 @@ compute_p_r_cond_s_g <- function(
 #' @importFrom dplyr bind_cols
 #' @export bisg
 bisg <- function(
-  voter_file, surname_col, geo_col, census_counts = NULL, geography = NULL,
-  state = NULL, county = NULL, year = NULL, geo_col_counts = "fips",
-  race_cols = c("whi", "bla", "his", "asi", "oth"), impute_missing = TRUE,
-  verbose = FALSE, cache = FALSE
+  voter_file,
+  surname_col,
+  geo_col,
+  census_counts = NULL,
+  geography = NULL,
+  state = NULL,
+  county = NULL,
+  year = NULL,
+  geo_col_counts = "fips",
+  surname_col_counts = "surname",
+  race_cols = c("whi", "bla", "his", "asi", "oth"),
+  impute_missing = TRUE,
+  verbose = FALSE,
+  cache = FALSE
 ) {
   # If counts aren't provided, obtain then via tidycensus
   if (is.null(census_counts)) {
@@ -332,10 +367,6 @@ bisg <- function(
   if (verbose) {
     message("Merging surnames.")
   }
-  p_r_s <- compute_p_r_cond_s(
-    voter_file = voter_file,
-    surname_col = surname_col
-  )
   # Compute the probability of race conditioned on geography and surname
   if (verbose) {
     message("Calculating BISG probabilities.")
@@ -346,8 +377,7 @@ bisg <- function(
     surname_col = surname_col,
     geo_col = geo_col,
     race_cols = race_cols,
-    geo_col_counts = geo_col_counts,
-    p_r_s = p_r_s
+    geo_col_counts = geo_col_counts
   )
   # If necessary, impute the records located in blocks recorded as having no
   # population
