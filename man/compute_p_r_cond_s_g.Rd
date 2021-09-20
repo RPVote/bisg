@@ -7,35 +7,42 @@ on surname and geolocation.}
 \usage{
 compute_p_r_cond_s_g(
   voter_file,
-  counts,
+  geo_counts,
   surname_col,
   geo_col,
+  surname_counts = NULL,
   race_cols = c("whi", "bla", "his", "asi", "oth"),
   geo_col_counts = "fips",
-  p_r_s = NULL
+  surname_col_counts = "surname"
 )
 }
 \arguments{
 \item{voter_file}{A tibble containing a list of voters (by row), and a
 column that denotes their surname.}
 
-\item{counts}{A tibble containing counts (divided amongst constituent groups)
-per geographic units (rows).}
-
 \item{surname_col}{A string denoting which column contains the voter surname.}
 
 \item{geo_col}{A string denoting which column contains the geographic unit
 ID.}
 
+\item{surname_counts}{A dataframe denoting the frequency with which surnames
+correspond to different race/ethnicities. If NULL, the Census surname list is
+ used with categories and merging functions from wru. The dataframe should
+contain one column with surnames (specified with the y surname_col_counts
+parameter) and one column for each race/ethnicity group (specified with the
+race_cols parameter).}
+
 \item{race_cols}{A list of strings denoting the columns containing racial
 groups.}
 
-\item{geo_col_counts}{A string denoting the column in the counts tibble that
-refers to the geographic unit.}
+\item{geo_col_counts}{A string denoting the column in the geo_counts tibble
+that refers to the geographic unit.}
 
-\item{p_r_s}{A dataframe denoting the probability of race conditioned on
-surname that matches with the provided voter file. Can accelerate
-computation if provided up front.}
+\item{surname_col_counts}{A string denoting the column in the surname_counts
+tibble that refers to the geographic unit.}
+
+\item{counts}{A tibble containing counts (divided amongst constituent groups)
+per geographic units (rows).}
 }
 \value{
 A tibble with rows denoting voters and columns denoting the
