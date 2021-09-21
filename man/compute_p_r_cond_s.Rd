@@ -10,7 +10,8 @@ compute_p_r_cond_s(
   surname_col,
   surname_counts = NULL,
   surname_col_counts = "surname",
-  race_cols = c("whi", "bla", "his", "asi", "oth")
+  race_cols = c("whi", "bla", "his", "asi", "oth"),
+  impute_missing = TRUE
 )
 }
 \arguments{

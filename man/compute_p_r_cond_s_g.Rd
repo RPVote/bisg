@@ -20,6 +20,9 @@ compute_p_r_cond_s_g(
 \item{voter_file}{A tibble containing a list of voters (by row), and a
 column that denotes their surname.}
 
+\item{geo_counts}{A tibble containing counts (divided amongst constituent groups)
+per geographic units (rows).}
+
 \item{surname_col}{A string denoting which column contains the voter surname.}
 
 \item{geo_col}{A string denoting which column contains the geographic unit
@@ -40,9 +43,6 @@ that refers to the geographic unit.}
 
 \item{surname_col_counts}{A string denoting the column in the surname_counts
 tibble that refers to the geographic unit.}
-
-\item{counts}{A tibble containing counts (divided amongst constituent groups)
-per geographic units (rows).}
 }
 \value{
 A tibble with rows denoting voters and columns denoting the

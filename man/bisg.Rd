@@ -10,6 +10,7 @@ bisg(
   surname_col,
   geo_col,
   geo_counts = NULL,
+  surname_counts = NULL,
   geography = NULL,
   state = NULL,
   county = NULL,
@@ -34,6 +35,13 @@ ID.}
 \item{geo_counts}{A tibble containing counts (divided amongst constituent
 groups) per geographic units (rows). If NULL, these counts will be obtained
 using the eiCompare helper function and the other parameters.}
+
+\item{surname_counts}{A dataframe denoting the frequency with which surnames
+correspond to different race/ethnicities. If NULL, the Census surname list is
+ used with categories and merging functions from wru. The dataframe should
+contain one column with surnames (specified with the y surname_col_counts
+parameter) and one column for each race/ethnicity group (specified with the
+race_cols parameter).}
 
 \item{geography}{The geographic level at which to obtain Census data. If
 obtaining data from the decennial Census, can be up to "block". If
@@ -64,13 +72,6 @@ broader geographic unit.}
 \item{verbose}{A boolean denoting the verbosity.}
 
 \item{cache}{A boolean denoting whether Census data should be cached.}
-
-\item{surname_counts}{A dataframe denoting the frequency with which surnames
-correspond to different race/ethnicities. If NULL, the Census surname list is
- used with categories and merging functions from wru. The dataframe should
-contain one column with surnames (specified with the y surname_col_counts
-parameter) and one column for each race/ethnicity group (specified with the
-race_cols parameter).}
 }
 \value{
 A tibble with rows denoting voters and columns denoting the

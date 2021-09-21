@@ -5,10 +5,10 @@
 \title{Computes the probability a person is in a specific geographic unit,
 conditioned on a racial group.}
 \usage{
-compute_p_g_cond_r(counts, cols = c("whi", "bla", "his", "asi", "oth"))
+compute_p_g_cond_r(geo_counts, cols = c("whi", "bla", "his", "asi", "oth"))
 }
 \arguments{
-\item{counts}{A tibble containing counts (divided amongst constituent groups)
+\item{geo_counts}{A tibble containing counts (divided amongst constituent groups)
 per geographic units (rows).}
 
 \item{cols}{The columns denoting the constituent groups within each
