@@ -202,7 +202,9 @@ compute_p_r_cond_s <- function(
   surname_col,
   surname_counts = NULL,
   surname_col_counts = "surname",
-  race_cols = c("whi", "bla", "his", "asi", "oth")) {
+  race_cols = c("whi", "bla", "his", "asi", "oth"),
+  impute_missing = TRUE
+  ) {
 
   # If no surname table given, use wru default
   if (is.null(surname_counts)) {
@@ -238,6 +240,13 @@ compute_p_r_cond_s <- function(
         y = surname_counts,
         by = stats::setNames(surname_col_counts, surname_col)
       )
+
+    # Fill in missing names with mean probability across all surnames
+    # (surnames weighted equally!)
+    if (impute_missing) {
+      p_r_s[which(is.na(p_r_s[[race_cols[1]]])), race_cols] <-
+        colMeans(surname_counts[,race_cols])
+    }
   }
   return(p_r_s)
 }

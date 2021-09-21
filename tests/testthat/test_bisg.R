@@ -15,16 +15,21 @@ test_that("BISG probabilities are computed correctly with custom inputs", {
   )
   # Raw data
   data <- data.frame(
-    "fips" = c("a"),
-    "surname" = c("x")
+    "fips" = c("a", "b"),
+    "surname" = c("x", "z")
   )
 
-  # Do BISG manually
+  # Do BISG manually for first row of data
   p_r_cond_s <- surname_counts[,c("w","b")]/rowSums(surname_counts[,c("w","b")])
-  p_s_cond_g <- t(t(geo_counts[,c("w", "b")])/colSums(geo_counts[,c("w", "b")]))
-  probs <- p_r_cond_s[which(surname_counts$surname == "x"),]*
-           p_s_cond_g[which(geo_counts$fips == "a"),]
-  probs <- probs/rowSums(probs)
+  p_g_cond_r <- t(t(geo_counts[,c("w", "b")])/colSums(geo_counts[,c("w", "b")]))
+  prob1 <- p_r_cond_s[which(surname_counts$surname == "x"),]*
+    p_g_cond_r[which(geo_counts$fips == "a"),]
+  prob1 <- as.numeric(prob1/rowSums(prob1))
+
+  # Now for second row with NA
+  prob2 <- colMeans(p_r_cond_s)*p_g_cond_r[which(geo_counts$fips == "b"),]
+  prob2 <- as.numeric(prob2/sum(prob2))
+
 
   # Now do it with the function
   probs_bisg <- bisg(
@@ -38,5 +43,6 @@ test_that("BISG probabilities are computed correctly with custom inputs", {
     race_cols = c("w", "b")
   )
 
-  expect_equal(probs, probs_bisg[1, c("w", "b")])
+  expect_equal(prob1, as.numeric(probs_bisg[1, c("w", "b")]))
+  expect_equal(prob2, as.numeric(probs_bisg[2, c("w", "b")]))
 })
