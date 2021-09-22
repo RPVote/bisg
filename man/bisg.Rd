@@ -9,12 +9,14 @@ bisg(
   voter_file,
   surname_col,
   geo_col,
-  census_counts = NULL,
+  geo_counts = NULL,
+  surname_counts = NULL,
   geography = NULL,
   state = NULL,
   county = NULL,
   year = NULL,
   geo_col_counts = "fips",
+  surname_col_counts = "surname",
   race_cols = c("whi", "bla", "his", "asi", "oth"),
   impute_missing = TRUE,
   verbose = FALSE,
@@ -30,9 +32,16 @@ column that denotes their surname.}
 \item{geo_col}{A string denoting which column contains the geographic unit
 ID.}
 
-\item{census_counts}{A tibble containing counts (divided amongst constituent
+\item{geo_counts}{A tibble containing counts (divided amongst constituent
 groups) per geographic units (rows). If NULL, these counts will be obtained
 using the eiCompare helper function and the other parameters.}
+
+\item{surname_counts}{A dataframe denoting the frequency with which surnames
+correspond to different race/ethnicities. If NULL, the Census surname list is
+ used with categories and merging functions from wru. The dataframe should
+contain one column with surnames (specified with the y surname_col_counts
+parameter) and one column for each race/ethnicity group (specified with the
+race_cols parameter).}
 
 \item{geography}{The geographic level at which to obtain Census data. If
 obtaining data from the decennial Census, can be up to "block". If
@@ -48,6 +57,9 @@ data. Otherwise, uses the 5-year ACS summary data.}
 
 \item{geo_col_counts}{A string denoting the column in the counts tibble that
 refers to the geographic unit.}
+
+\item{surname_col_counts}{A string denoting the column in the surname_counts
+tibble that refers to the geographic unit.}
 
 \item{race_cols}{A list of strings denoting the columns containing racial
 groups.}

@@ -5,13 +5,30 @@
 \title{Computes the probability a person is of a specific racial group, conditioned
 on surname.}
 \usage{
-compute_p_r_cond_s(voter_file, surname_col)
+compute_p_r_cond_s(
+  voter_file,
+  surname_col,
+  surname_counts = NULL,
+  surname_col_counts = "surname",
+  race_cols = c("whi", "bla", "his", "asi", "oth"),
+  impute_missing = TRUE
+)
 }
 \arguments{
 \item{voter_file}{A tibble containing a list of voters (by row), and a
 column that denotes their surname.}
 
 \item{surname_col}{A string denoting which column contains the voter surname.}
+
+\item{surname_counts}{A dataframe denoting the frequency with which surnames
+correspond to different race/ethnicities. If NULL, the Census surname list is
+ used with categories and merging functions from wru. The dataframe should
+contain one column with surnames (specified with the y surname_col_counts
+parameter) and one column for each race/ethnicity group (specified with the
+race_cols parameter).}
+
+\item{surname_col_counts}{A string denoting the column in the surname_counts
+tibble that refers to the geographic unit.}
 }
 \value{
 A tibble with rows denoting voters and columns denoting the
