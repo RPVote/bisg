@@ -195,7 +195,6 @@ compute_p_g_cond_r <- function(
 #' @param surname_col_counts A string denoting the column in the surname_counts
 #' tibble that refers to the geographic unit.
 #' @import dplyr
-#' @importFrom wru merge_surnames
 #' @export compute_p_r_cond_s
 compute_p_r_cond_s <- function(
   voter_file,
@@ -209,7 +208,10 @@ compute_p_r_cond_s <- function(
   # If no surname table given, use wru default
   if (is.null(surname_counts)) {
 
-    p_r_s <- suppressWarnings(suppressMessages(wru::merge_surnames(
+    # Get merge_surnames function out from wru
+    merge_surnames_copy <- utils::getFromNamespace("merge_surnames", "wru")
+
+    p_r_s <- suppressWarnings(suppressMessages(merge_surnames_copy(
       voter.file = dplyr::rename(voter_file,
                                  surname = dplyr::all_of(surname_col)),
       surname.year = 2010,
@@ -301,7 +303,11 @@ compute_p_r_cond_s_g <- function(
     surname_counts = surname_counts,
     surname_col_counts = surname_col_counts,
     race_cols = race_cols
-  )
+  ) %>%
+    rename_with(~ paste0("sur_", .), race_cols)
+
+  p_r_s_unique <- unique(p_r_s)
+
   # Compute probability of geography conditioned on race, for all geographies
   p_g_r_all <- compute_p_g_cond_r(geo_counts = geo_counts, cols = race_cols)
   # Check if the IDs for voter file and the counts have the same length
@@ -314,14 +320,33 @@ compute_p_r_cond_s_g <- function(
     x = voter_file,
     y = p_g_r_all,
     by = stats::setNames(geo_col_counts, geo_col)
-  )
-  # Compute the final probability of race
-  p_r_s_g <- (p_r_s[, race_cols] * p_g_r[, race_cols]) %>%
+  ) %>%
+    rename_with(~ paste0("geo_", .), race_cols)
+
+  p_r_s_g_join <- left_join(p_g_r,
+                            p_r_s_unique,
+                            by = stats::setNames(surname_col, surname_col))
+
+  p_r_s_g_mult <-
+    (p_r_s_g_join[, paste0("geo_", race_cols)] * p_r_s_g_join[, paste0("sur_", race_cols)]) %>%
+    rename_with(~ gsub("geo_", "", .x)) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(total = sum(dplyr::across(.cols = race_cols))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(dplyr::across(.cols = race_cols, .fns = ~ . / total)) %>%
     dplyr::select(dplyr::all_of(race_cols))
+
+
+  # # Compute the final probability of race
+  # p_r_s_g <- (p_r_s[, race_cols] * p_g_r[, race_cols]) %>%
+  #   dplyr::rowwise() %>%
+  #   dplyr::mutate(total = sum(dplyr::across(.cols = race_cols))) %>%
+  #   dplyr::ungroup() %>%
+  #   dplyr::mutate(dplyr::across(.cols = race_cols, .fns = ~ . / total)) %>%
+  #   dplyr::select(dplyr::all_of(race_cols))
+
+  p_r_s_g <- cbind(p_r_s_g_join[,c(surname_col, geo_col)], p_r_s_g_mult)
+
   return(p_r_s_g)
 }
 
@@ -463,7 +488,16 @@ bisg <- function(
     }
   }
   # Combine BISG probabilities back into voter file
-  voter_file <- dplyr::bind_cols(voter_file, p_r_s_g)
+  p_r_s_g_unique <- unique(p_r_s_g)
+
+  voter_file <- left_join(
+    voter_file,
+    p_r_s_g_unique,
+    by = stats::setNames(c(surname_col, geo_col), c(surname_col, geo_col))
+  )
+
+  #voter_file <- dplyr::bind_cols(voter_file, p_r_s_g)
+
   if (verbose) {
     message("BISG complete.")
   }
