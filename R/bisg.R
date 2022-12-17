@@ -194,6 +194,9 @@ compute_p_g_cond_r <- function(
 #' race_cols parameter).
 #' @param surname_col_counts A string denoting the column in the surname_counts
 #' tibble that refers to the geographic unit.
+#' @param race_cols name of race columns in \code{surname_counts} data.frame.
+#' @param impute_missing Boolean indicating weather to fill in missing names
+#' with mean probability across all surnames.
 #' @import dplyr
 #' @export compute_p_r_cond_s
 compute_p_r_cond_s <- function(
