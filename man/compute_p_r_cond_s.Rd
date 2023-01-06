@@ -29,6 +29,11 @@ race_cols parameter).}
 
 \item{surname_col_counts}{A string denoting the column in the surname_counts
 tibble that refers to the geographic unit.}
+
+\item{race_cols}{name of race columns in \code{surname_counts} data.frame.}
+
+\item{impute_missing}{Boolean indicating weather to fill in missing names
+with mean probability across all surnames.}
 }
 \value{
 A tibble with rows denoting voters and columns denoting the
