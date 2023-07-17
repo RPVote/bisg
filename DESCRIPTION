@@ -3,15 +3,16 @@ Type: Package
 Title: Performs Bayesian Improved Surname Geocoding 
 Version: 0.1.0
 Authors@R: 
-  c(person(given = "Loren",
-           family = "Collingwood",
-           role = c("aut", "cre"),
-           email = "lcollingwood@unm.edu",
-           comment = c(ORCID = "0000-0002-4447-8204")),
-    person(given = "Ari",
+  c(person(given = "Ari",
            family = "Decter-Frain",
+           role = c("aut", "cre"),
+           email = "adecterfrain@gmail.com",
+           comment = c(ORCID = "0000-0001-9635-3334")),
+    person(given = "Pratik",
+           family = "Sachdeva",
            role = c("aut"),
-           email = "adecterfrain@gmail.com"),
+           email = "pratik.sachdeva@berkeley.edu",
+           comment = c(ORCID = "0000-0002-6809-2437")),
     person(given ="Rachel", 
            family = "Carroll", 
            role = c("aut"),
