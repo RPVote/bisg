@@ -50,12 +50,12 @@ get_census_race_counts <- function(
       output = "wide",
       cache_table = cache)) %>%
       dplyr::mutate(
-        fips = GEOID,
-        whi = P005003,
-        bla = P005004,
-        his = P005010,
-        asi = P005006 + P005007,
-        oth = P005005 + P005008 + P005009) %>%
+        fips = .data$GEOID,
+        whi = .data$P005003,
+        bla = .data$P005004,
+        his = .data$P005010,
+        asi = .data$P005006 + .data$P005007,
+        oth = .data$P005005 + .data$P005008 + .data$P005009) %>%
       dplyr::select(dplyr::all_of(c("fips", "whi", "bla", "his", "asi", "oth")))
   } else {
     # Variable names for ACS
@@ -80,15 +80,16 @@ get_census_race_counts <- function(
       survey = "acs5",
       cache_table = cache)) %>%
       dplyr::mutate(
-        fips = GEOID,
-        whi = B03002_003E,
-        bla = B03002_004E,
-        his = B03002_012E,
-        asi = B03002_006E + B03002_007E,
-        oth = B03002_008E + B03002_009E + B03002_010E + B03002_011E
+        fips = .data$GEOID,
+        whi = .data$B03002_003E,
+        bla = .data$B03002_004E,
+        his = .data$B03002_012E,
+        asi = .data$B03002_006E + .data$B03002_007E,
+        oth = .data$B03002_008E + .data$B03002_009E +
+          .data$B03002_010E + .data$B03002_011E
       ) %>%
       dplyr::select(
-        fips, any_of("whi", "bla", "his", "asi", "oth")
+        'fips', any_of("whi", "bla", "his", "asi", "oth")
       )
   }
   return(counts)
@@ -198,6 +199,7 @@ compute_p_g_cond_r <- function(
 #' @param impute_missing Boolean indicating weather to fill in missing names
 #' with mean probability across all surnames.
 #' @import dplyr
+#' @import wru
 #' @export compute_p_r_cond_s
 compute_p_r_cond_s <- function(
   voter_file,
@@ -214,20 +216,22 @@ compute_p_r_cond_s <- function(
     # Get merge_surnames function out from wru
     merge_surnames_copy <- utils::getFromNamespace("merge_surnames", "wru")
 
-    p_r_s <- suppressWarnings(suppressMessages(merge_surnames_copy(
-      voter.file = dplyr::rename(voter_file,
-                                 surname = dplyr::all_of(surname_col)),
-      surname.year = 2010,
-      clean.surname = TRUE,
-      impute.missing = TRUE
-    ))) %>%
+    p_r_s <- suppressWarnings(suppressMessages(
+      merge_surnames_copy(
+        voter.file = dplyr::rename(voter_file,
+                                   surname = dplyr::all_of(surname_col)),
+        surname.year = 2010,
+        clean.surname = TRUE,
+        impute.missing = TRUE
+    )
+    )) %>%
       dplyr::rename(
-        !!surname_col := surname,
-        whi = p_whi,
-        bla = p_bla,
-        his = p_his,
-        asi = p_asi,
-        oth = p_oth
+        !!surname_col := 'surname',
+        whi = 'p_whi',
+        bla = 'p_bla',
+        his = 'p_his',
+        asi = 'p_asi',
+        oth = 'p_oth'
       ) %>%
       dplyr::select(
         all_of(surname_col), all_of(race_cols)
@@ -353,8 +357,8 @@ compute_p_r_cond_s_g <- function(
   return(p_r_s_g)
 }
 
-
-#' Performs Bayesian Improved Surname Geocoding: Computes the probability a
+#' @title Performs Bayesian Improved Surname Geocoding(BISG)
+#' @description Performs BISG, i.e computes the probability a
 #' person is of a specific racial group, conditioned on surname and geolocation.
 #'
 #' @param voter_file A tibble containing a list of voters (by row), and a
@@ -362,7 +366,7 @@ compute_p_r_cond_s_g <- function(
 #' @param surname_col A string denoting which column contains the voter surname.
 #' @param geo_col A string denoting which column contains the geographic unit
 #'  ID.
-#' @param geo_counts A tibble containing counts (divided amongst constituent
+#' @param geo_counts A tibble containing counts (divided among constituent
 #'  groups) per geographic units (rows). If NULL, these counts will be obtained
 #'  using the eiCompare helper function and the other parameters.
 #' @param surname_counts A dataframe denoting the frequency with which surnames
@@ -413,7 +417,7 @@ bisg <- function(
   verbose = FALSE,
   cache = FALSE
 ) {
-  # If counts aren't provided, obtain then via tidycensus
+  # If geo_counts aren't provided, obtain them via tidycensus
   if (is.null(geo_counts)) {
     if (verbose) {
       message("Obtaining counts from Census Bureau using tidycensus.")
@@ -459,6 +463,15 @@ bisg <- function(
           message(paste("Geography not provided.",
                         "Imputing with surname probabilities."))
         }
+
+        p_r_s <- compute_p_r_cond_s(
+          voter_file = voter_file,
+          surname_col = surname_col,
+          surname_counts = surname_counts,
+          surname_col_counts = surname_col_counts,
+          race_cols = race_cols
+        )
+
         p_r_s_g[no_geocode_match, race_cols] <- p_r_s[no_geocode_match,
                                                       race_cols]
       } else {
@@ -482,8 +495,7 @@ bisg <- function(
           surname_col = surname_col,
           geo_col = geo_col,
           race_cols = race_cols,
-          geo_col_counts = geo_col_counts,
-          p_r_s = p_r_s[no_geocode_match, ]
+          geo_col_counts = geo_col_counts
         )
         p_r_s_g[no_geocode_match, ] <- new_p_r_s_g
       }

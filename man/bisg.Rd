@@ -2,8 +2,7 @@
 % Please edit documentation in R/bisg.R
 \name{bisg}
 \alias{bisg}
-\title{Performs Bayesian Improved Surname Geocoding: Computes the probability a
-person is of a specific racial group, conditioned on surname and geolocation.}
+\title{Performs Bayesian Improved Surname Geocoding(BISG)}
 \usage{
 bisg(
   voter_file,
@@ -32,7 +31,7 @@ column that denotes their surname.}
 \item{geo_col}{A string denoting which column contains the geographic unit
 ID.}
 
-\item{geo_counts}{A tibble containing counts (divided amongst constituent
+\item{geo_counts}{A tibble containing counts (divided among constituent
 groups) per geographic units (rows). If NULL, these counts will be obtained
 using the eiCompare helper function and the other parameters.}
 
@@ -78,6 +77,6 @@ A tibble with rows denoting voters and columns denoting the
  probability that each voter is of a particular racial group.
 }
 \description{
-Performs Bayesian Improved Surname Geocoding: Computes the probability a
+Performs BISG, i.e computes the probability a
 person is of a specific racial group, conditioned on surname and geolocation.
 }
