@@ -80,3 +80,42 @@ A tibble with rows denoting voters and columns denoting the
 Performs BISG, i.e computes the probability a
 person is of a specific racial group, conditioned on surname and geolocation.
 }
+\examples{
+
+library(eiExpand)
+
+# Load WA example data from eiExpand #
+data("wa_geocoded")
+data("wa_block_data")
+
+# Use lat/long to merge with block shapes,
+# Bring in block identifier #
+voter_file_geo <- eiCompare::merge_voter_file_to_shape(
+  voter_file = wa_geocoded,
+  shape_file = wa_block_data,
+  coords = c("longitude","latitude"),
+  voter_id = "id") \%>\%
+  dplyr::as_tibble() \%>\%
+  dplyr::select("id", "county", "precinct", "surname", "GEOID20")
+
+# Run BISG #
+bisg_vf <- bisg(
+  voter_file = voter_file_geo,
+  surname_col = "surname",
+  geo_col = "GEOID20",
+  geo_counts = wa_block_data \%>\% as.data.frame(),
+  geography = "block",
+  state = "WA",
+  geo_col_counts = "GEOID20",
+  impute_missing = FALSE
+)
+
+# Preview individual race predictions #
+dplyr::glimpse(bisg_vf)
+#'
+
+
+
+
+
+}
